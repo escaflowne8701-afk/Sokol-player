@@ -1,0 +1,27 @@
+
+/* PLAYER CENTER & SIZE PATCH */
+#playerBox,
+.player-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 18px;
+}
+
+#playerBox video,
+.player-wrapper video {
+  width: 75%;
+  max-width: 1100px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 14px;
+  box-shadow: 0 0 45px rgba(0,0,0,.65);
+}
+
+@media (max-width: 768px) {
+  #playerBox video,
+  .player-wrapper video {
+    width: 96%;
+    border-radius: 10px;
+  }
+}

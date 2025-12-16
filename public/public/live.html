@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Live TV - Sokol Player</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    .live-now {
+      background: rgba(229, 9, 20, 0.1);
+      border: 1px solid #e50914;
+      border-radius: 8px;
+      padding: 10px 15px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .live-now i {
+      color: #e50914;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    .channel-count {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span>📺</span>
+        <span>LIVE TV</span>
+      </div>
+      <div style="font-size:14px;color:#aaa">
+        <a href="index.html" style="color:#aaa;text-decoration:none">
+          <i class="fas fa-home"></i> Home
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="topbar">
+    <a href="index.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <i class="fas fa-home"></i> Home
+    </a>
+    <a href="live.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <strong><i class="fas fa-tv"></i> Live</strong>
+    </a>
+    <a href="movies.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <i class="fas fa-film"></i> Movies
+    </a>
+    <a href="series.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <i class="fas fa-list"></i> Series
+    </a>
+    <div style="margin-left:auto">
+      <a href="settings.html" style="color:#fff;text-decoration:none">
+        <i class="fas fa-cog"></i> Settings
+      </a>
+    </div>
+  </div>
+  
+  <div class="container">
+    <div class="sidebar">
+      <h3><i class="fas fa-folder"></i> Channel Groups</h3>
+      <button class="scroll-btn scroll-up-btn" onclick="scrollGroups(-150)">▲</button>
+      <div id="groupsList" class="groups">
+        <div class="small">Loading groups...</div>
+      </div>
+      <button class="scroll-btn scroll-down-btn" onclick="scrollGroups(150)">▼</button>
+      <div class="note">
+        <i class="fas fa-mouse-pointer"></i> Click a group to load channels
+      </div>
+      <div id="groupStats" class="small" style="margin-top:10px;color:#aaa"></div>
+    </div>
+    
+    <div class="content">
+      <div class="controls">
+        <div style="display:flex;gap:10px;align-items:center">
+          <input id="search" class="search" placeholder="🔍 Search channels..." autocomplete="off"/>
+          <select id="order" class="order">
+            <option value="name">A-Z Order</option>
+            <option value="added">Recently Added</option>
+          </select>
+          <button id="refreshBtn" class="play-btn" style="background:#555;padding:8px 12px">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+      
+      <div id="groups" class="grid">
+        <div style="text-align:center;padding:40px;color:#9aa0a6">
+          <div style="font-size:48px;margin-bottom:20px;opacity:0.5">📺</div>
+          <h3>No Channels Loaded</h3>
+          <p>Select a channel group from the sidebar to begin</p>
+          <div style="margin-top:20px">
+            <a href="settings.html" class="play-btn" style="display:inline-flex;align-items:center;gap:8px">
+              <i class="fas fa-upload"></i> Upload Playlist
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div id="loadingIndicator" class="small" style="text-align:center;display:none;margin-top:20px">
+        <div class="loading-spinner"></div> Loading channels...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function scrollGroups(amount) {
+      const groupsList = document.getElementById('groupsList');
+      if (groupsList) {
+        groupsList.scrollBy({ top: amount, behavior: 'smooth' });
+      }
+    }
+  </script>
+  
+  <!-- Load shared utilities FIRST -->
+  <script src="js/app.js"></script>
+  <!-- Then load page-specific script -->
+  <script src="js/live.js"></script>
+  
+  <script>
+    // Additional initialization for live page
+    document.addEventListener('DOMContentLoaded', function() {
+      const refreshBtn = document.getElementById('refreshBtn');
+      const orderSelect = document.getElementById('order');
+      
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+          const activeGroup = document.querySelector('#groupsList .group-item.active');
+          if (activeGroup) {
+            const group = decodeURIComponent(activeGroup.dataset.group);
+            if (window.loadLive) {
+              window.loadLive(group);
+            }
+          }
+        });
+      }
+      
+      if (orderSelect) {
+        orderSelect.addEventListener('change', function() {
+          const activeGroup = document.querySelector('#groupsList .group-item.active');
+          if (activeGroup) {
+            const group = decodeURIComponent(activeGroup.dataset.group);
+            if (window.loadLive) {
+              window.loadLive(group);
+            }
+          }
+        });
+      }
+      
+      // Check if HLS.js is loaded
+      if (!window.Hls) {
+        console.warn('HLS.js not loaded - some streams may not play');
+        const grid = document.getElementById('groups');
+        if (grid && grid.innerHTML.includes('No Channels Loaded')) {
+          grid.innerHTML = `
+            <div style="text-align:center;padding:40px;color:#ff6b6b">
+              <div style="font-size:48px;margin-bottom:20px">⚠️</div>
+              <h3>HLS.js Required</h3>
+              <p>HLS.js library failed to load. Some streams may not play properly.</p>
+              <p class="small">Check your internet connection and refresh the page.</p>
+            </div>
+          `;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

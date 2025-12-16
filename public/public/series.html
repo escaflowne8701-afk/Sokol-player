@@ -1,0 +1,277 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>TV Series - Sokol Player</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    .series-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    .season-count {
+      background: rgba(0, 150, 255, 0.2);
+      color: #4da6ff;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .episode-count {
+      background: rgba(100, 255, 100, 0.2);
+      color: #a8ffb0;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .series-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #ffd700;
+    }
+    .continue-watching {
+      background: rgba(229, 9, 20, 0.1);
+      border: 1px solid #e50914;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+    .continue-watching h4 {
+      margin: 0 0 10px 0;
+      color: #e50914;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span>📺</span>
+        <span>TV SERIES</span>
+      </div>
+      <div style="font-size:14px;color:#aaa">
+        <a href="index.html" style="color:#aaa;text-decoration:none">
+          <i class="fas fa-home"></i> Home
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="topbar">
+    <a href="index.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <i class="fas fa-home"></i> Home
+    </a>
+    <a href="live.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <i class="fas fa-tv"></i> Live
+    </a>
+    <a href="movies.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <i class="fas fa-film"></i> Movies
+    </a>
+    <a href="series.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <strong><i class="fas fa-list"></i> Series</strong>
+    </a>
+    <div style="margin-left:auto">
+      <a href="settings.html" style="color:#fff;text-decoration:none">
+        <i class="fas fa-cog"></i> Settings
+      </a>
+    </div>
+  </div>
+  
+  <div class="container">
+    <div class="sidebar">
+      <h3><i class="fas fa-folder"></i> Series Categories</h3>
+      <button class="scroll-btn scroll-up-btn" onclick="scrollGroups(-150)">▲</button>
+      <div id="groupsList" class="groups">
+        <div class="small">Loading categories...</div>
+      </div>
+      <button class="scroll-btn scroll-down-btn" onclick="scrollGroups(150)">▼</button>
+      <div class="note">
+        <i class="fas fa-mouse-pointer"></i> Click a category to load series
+      </div>
+      <div id="seriesStats" class="small" style="margin-top:10px;color:#aaa"></div>
+    </div>
+    
+    <div class="content">
+      <div class="controls">
+        <div style="display:flex;gap:10px;align-items:center">
+          <input id="search" class="search" placeholder="🔍 Search series..." autocomplete="off"/>
+          <select id="order" class="order">
+            <option value="name">A-Z Order</option>
+            <option value="seasons">Most Seasons</option>
+            <option value="added">Recently Added</option>
+          </select>
+          <button id="refreshBtn" class="play-btn" style="background:#555;padding:8px 12px">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+      
+      <div id="grid" class="grid">
+        <div style="text-align:center;padding:40px;color:#9aa0a6">
+          <div style="font-size:48px;margin-bottom:20px;opacity:0.5">📺</div>
+          <h3>No Series Loaded</h3>
+          <p>Select a series category from the sidebar to begin</p>
+          <div style="margin-top:20px">
+            <a href="settings.html" class="play-btn" style="display:inline-flex;align-items:center;gap:8px">
+              <i class="fas fa-upload"></i> Upload Playlist
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div id="loadingIndicator" class="small" style="text-align:center;display:none;margin-top:20px">
+        <div class="loading-spinner"></div> Loading series...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function scrollGroups(amount) {
+      const groupsList = document.getElementById('groupsList');
+      if (groupsList) {
+        groupsList.scrollBy({ top: amount, behavior: 'smooth' });
+      }
+    }
+  </script>
+  
+  <!-- Load shared utilities FIRST -->
+  <script src="js/app.js"></script>
+  <!-- Then load page-specific script -->
+  <script src="js/series_client.js"></script>
+  
+  <script>
+    // Additional initialization for series page
+    document.addEventListener('DOMContentLoaded', function() {
+      const refreshBtn = document.getElementById('refreshBtn');
+      const orderSelect = document.getElementById('order');
+      const searchInput = document.getElementById('search');
+      
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+          const activeGroup = document.querySelector('#groupsList .group-item.active');
+          if (activeGroup) {
+            const group = decodeURIComponent(activeGroup.dataset.group);
+            if (window.loadShows) {
+              window.loadShows(group);
+            }
+          }
+        });
+      }
+      
+      if (orderSelect) {
+        orderSelect.addEventListener('change', function() {
+          const activeGroup = document.querySelector('#groupsList .group-item.active');
+          if (activeGroup) {
+            const group = decodeURIComponent(activeGroup.dataset.group);
+            if (window.loadShows) {
+              window.loadShows(group);
+            }
+          }
+        });
+      }
+      
+      // Debounced search
+      let searchTimeout;
+      if (searchInput) {
+        searchInput.addEventListener('input', function() {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            const activeGroup = document.querySelector('#groupsList .group-item.active');
+            if (activeGroup) {
+              const group = decodeURIComponent(activeGroup.dataset.group);
+              if (window.loadShows) {
+                window.loadShows(group);
+              }
+            }
+          }, 300);
+        });
+      }
+      
+      // Load continue watching from localStorage
+      function loadContinueWatching() {
+        try {
+          const continueWatching = JSON.parse(localStorage.getItem('sokol_continue_watching') || '[]');
+          if (continueWatching.length > 0) {
+            const grid = document.getElementById('grid');
+            if (grid && grid.innerHTML.includes('No Series Loaded')) {
+              grid.innerHTML = `
+                <div class="continue-watching">
+                  <h4><i class="fas fa-history"></i> Continue Watching</h4>
+                  ${continueWatching.map(item => `
+                    <div style="margin-bottom:10px;padding:8px;background:rgba(0,0,0,0.3);border-radius:6px">
+                      <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                          <strong>${escapeHtml(item.title || 'Unknown')}</strong>
+                          <div class="small">S${item.season}:E${item.episode}</div>
+                        </div>
+                        <button class="play-btn" onclick="playEpisode('${encodeURIComponent(item.url || '')}', '${escapeHtml(item.title || '')} - S${item.season}:E${item.episode}')">
+                          Continue
+                        </button>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+                ${grid.innerHTML}
+              `;
+            }
+          }
+        } catch (e) {
+          console.error('Failed to load continue watching:', e);
+        }
+      }
+      
+      // Save continue watching
+      window.saveContinueWatching = function(showTitle, season, episode, url) {
+        try {
+          const continueWatching = JSON.parse(localStorage.getItem('sokol_continue_watching') || '[]');
+          const existingIndex = continueWatching.findIndex(item => item.title === showTitle);
+          
+          const item = {
+            title: showTitle,
+            season: season,
+            episode: episode,
+            url: url,
+            timestamp: Date.now()
+          };
+          
+          if (existingIndex >= 0) {
+            continueWatching[existingIndex] = item;
+          } else {
+            continueWatching.unshift(item);
+            // Keep only last 5 items
+            if (continueWatching.length > 5) continueWatching.pop();
+          }
+          
+          localStorage.setItem('sokol_continue_watching', JSON.stringify(continueWatching));
+        } catch (e) {
+          console.error('Failed to save continue watching:', e);
+        }
+      };
+      
+      // Modify playEpisode to save progress
+      const originalPlayEpisode = window.playEpisode;
+      if (originalPlayEpisode) {
+        window.playEpisode = function(encUrl, title) {
+          // Extract season/episode from title if possible
+          const match = title.match(/S(\d+):E(\d+)/);
+          if (match) {
+            const showTitle = title.split(' - ')[0];
+            window.saveContinueWatching(showTitle, match[1], match[2], decodeURIComponent(encUrl));
+          }
+          originalPlayEpisode(encUrl, title);
+        };
+      }
+      
+      // Load continue watching on page load
+      loadContinueWatching();
+    });
+  </script>
+</body>
+</html>

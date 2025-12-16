@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Movies - Sokol Player</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    .movie-genres {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 5px;
+    }
+    .genre-tag {
+      background: rgba(229, 9, 20, 0.2);
+      color: #ff6b6b;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      border: 1px solid rgba(229, 9, 20, 0.3);
+    }
+    .movie-meta {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 5px;
+    }
+    .movie-year {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .quality-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #a8ffb0;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span>🎬</span>
+        <span>MOVIES</span>
+      </div>
+      <div style="font-size:14px;color:#aaa">
+        <a href="index.html" style="color:#aaa;text-decoration:none">
+          <i class="fas fa-home"></i> Home
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="topbar">
+    <a href="index.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <i class="fas fa-home"></i> Home
+    </a>
+    <a href="live.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <i class="fas fa-tv"></i> Live
+    </a>
+    <a href="movies.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <strong><i class="fas fa-film"></i> Movies</strong>
+    </a>
+    <a href="series.html" style="color:#fff;text-decoration:none;margin-right:12px">
+      <i class="fas fa-list"></i> Series
+    </a>
+    <div style="margin-left:auto">
+      <a href="settings.html" style="color:#fff;text-decoration:none">
+        <i class="fas fa-cog"></i> Settings
+      </a>
+    </div>
+  </div>
+  
+  <div class="container">
+    <div class="sidebar">
+      <h3><i class="fas fa-folder"></i> Movie Categories</h3>
+      <button class="scroll-btn scroll-up-btn" onclick="scrollGroups(-150)">▲</button>
+      <div id="groupsList" class="groups">
+        <div class="small">Loading categories...</div>
+      </div>
+      <button class="scroll-btn scroll-down-btn" onclick="scrollGroups(150)">▼</button>
+      <div class="note">
+        <i class="fas fa-mouse-pointer"></i> Click a category to load movies
+      </div>
+      <div id="movieStats" class="small" style="margin-top:10px;color:#aaa"></div>
+    </div>
+    
+    <div class="content">
+      <div class="controls">
+        <div style="display:flex;gap:10px;align-items:center">
+          <input id="search" class="search" placeholder="🔍 Search movies..." autocomplete="off"/>
+          <select id="order" class="order">
+            <option value="name">A-Z Order</option>
+            <option value="year">Release Year</option>
+            <option value="added">Recently Added</option>
+          </select>
+          <button id="refreshBtn" class="play-btn" style="background:#555;padding:8px 12px">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+      
+      <div id="grid" class="grid">
+        <div style="text-align:center;padding:40px;color:#9aa0a6">
+          <div style="font-size:48px;margin-bottom:20px;opacity:0.5">🎬</div>
+          <h3>No Movies Loaded</h3>
+          <p>Select a movie category from the sidebar to begin</p>
+          <div style="margin-top:20px">
+            <a href="settings.html" class="play-btn" style="display:inline-flex;align-items:center;gap:8px">
+              <i class="fas fa-upload"></i> Upload Playlist
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div id="loadingIndicator" class="small" style="text-align:center;display:none;margin-top:20px">
+        <div class="loading-spinner"></div> Loading movies...
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function scrollGroups(amount) {
+      const groupsList = document.getElementById('groupsList');
+      if (groupsList) {
+        groupsList.scrollBy({ top: amount, behavior: 'smooth' });
+      }
+    }
+  </script>
+  
+  <!-- Load shared utilities FIRST -->
+  <script src="js/app.js"></script>
+  <!-- Then load page-specific script -->
+  <script src="js/movies.js"></script>
+  
+  <script>
+    // Additional initialization for movies page
+    document.addEventListener('DOMContentLoaded', function() {
+      const refreshBtn = document.getElementById('refreshBtn');
+      const orderSelect = document.getElementById('order');
+      const searchInput = document.getElementById('search');
+      
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+          const activeGroup = document.querySelector('#groupsList .group-item.active');
+          if (activeGroup) {
+            const group = decodeURIComponent(activeGroup.dataset.group);
+            if (window.loadMovies) {
+              window.loadMovies(group);
+            }
+          }
+        });
+      }
+      
+      if (orderSelect) {
+        orderSelect.addEventListener('change', function() {
+          const activeGroup = document.querySelector('#groupsList .group-item.active');
+          if (activeGroup) {
+            const group = decodeURIComponent(activeGroup.dataset.group);
+            if (window.loadMovies) {
+              window.loadMovies(group);
+            }
+          }
+        });
+      }
+      
+      // Debounced search
+      let searchTimeout;
+      if (searchInput) {
+        searchInput.addEventListener('input', function() {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            const activeGroup = document.querySelector('#groupsList .group-item.active');
+            if (activeGroup) {
+              const group = decodeURIComponent(activeGroup.dataset.group);
+              if (window.loadMovies) {
+                window.loadMovies(group);
+              }
+            }
+          }, 300);
+        });
+      }
+      
+      // Detect movie quality from URL
+      window.detectMovieQuality = function(url) {
+        if (!url) return '';
+        const urlLower = url.toLowerCase();
+        if (urlLower.includes('4k') || urlLower.includes('uhd') || urlLower.includes('2160p')) return '4K';
+        if (urlLower.includes('1080p') || urlLower.includes('fhd')) return 'HD';
+        if (urlLower.includes('720p') || urlLower.includes('hd')) return 'HD';
+        if (urlLower.includes('480p') || urlLower.includes('sd')) return 'SD';
+        return '';
+      };
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Player</title>
+<link rel="stylesheet" href="css/netflix-player.css"/>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+<div class="np-player" id="npPlayer">
+  <video id="npVideo" playsinline webkit-playsinline></video>
+  <div class="np-top"><button id="npBack" class="np-btn">← Back</button><div id="npTitle" class="np-title">Playing</div></div>
+  <div id="npControls" class="np-controls">
+    <input id="npSeek" class="np-seek" type="range" min="0" max="100" value="0"/>
+    <div class="np-row">
+      <div class="np-left">
+        <button id="npRew" class="np-btn">⟲10</button>
+        <button id="npPlay" class="np-btn">❚❚</button>
+        <button id="npFwd" class="np-btn">10⟳</button>
+        <span id="npTime" class="np-time">0:00 / 0:00</span>
+      </div>
+      <div class="np-right">
+        <select id="audioTracks" class="np-select"></select>
+        <select id="subTracks" class="np-select"></select>
+        <input id="npVolume" type="range" min="0" max="1" step="0.05" value="1" class="np-volume"/>
+        <button id="npFS" class="np-btn">⛶</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/netflix-player.js"></script>
+<script>
+const p = new URLSearchParams(location.search);
+const stream = p.get('url') || '';
+const title = p.get('title') || '';
+document.getElementById('npTitle').textContent = title || 'Playing';
+window.NP_PROXIED = '/stream?url=' + encodeURIComponent(stream);
+window.NP_STREAM = stream;
+</script>
+</body>
+</html>

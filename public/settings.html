@@ -1,0 +1,435 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Settings — Upload Playlist</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    section {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #333;
+    }
+    section h3 {
+      margin-top: 0;
+      color: #e50914;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    section h3::before {
+      content: "▶";
+      font-size: 14px;
+    }
+    code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #a8ffb0;
+    }
+    .status-success {
+      color: #a8ffb0;
+    }
+    .status-error {
+      color: salmon;
+    }
+    .status-info {
+      color: #4da6ff;
+    }
+    .file-size {
+      font-size: 12px;
+      color: #aaa;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div style="max-width:900px;margin:28px auto;padding:18px;background:rgba(0,0,0,0.35);border-radius:10px">
+    <h2 style="display:flex;align-items:center;gap:10px">
+      <span style="color:#e50914">⚙️</span> Playlist Settings
+    </h2>
+    <p class="small">Manage your IPTV playlists and EPG data. All files are saved to the <code>upload/</code> directory.</p>
+    
+    <section>
+      <h3>1) Upload .m3u file</h3>
+      <p class="small">Select a local M3U playlist file</p>
+      <input id="fileInput" type="file" accept=".m3u,.m3u8,.txt" style="width:100%;padding:8px;border-radius:6px;background:#222;border:1px solid #444;color:#fff"/>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="uploadFileBtn" class="play-btn">
+          <span>📤 Upload File</span>
+        </button>
+        <button id="clearFileBtn" class="play-btn" style="background:#777">
+          <span>🗑️ Clear</span>
+        </button>
+      </div>
+      <div id="fileStatus" class="small" style="margin-top:8px"></div>
+    </section>
+    
+    <hr style="border-color:#444;margin:24px 0"/>
+    
+    <section>
+      <h3>2) Save from URL</h3>
+      <p class="small">Download playlist from a remote URL</p>
+      <input id="urlInput" type="text" placeholder="https://example.com/sensei.m3u" style="width:100%;padding:8px;border-radius:6px;background:#222;border:1px solid #444;color:#fff"/>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="uploadUrlBtn" class="play-btn">
+          <span>🌐 Download & Save</span>
+        </button>
+        <button id="clearUrlBtn" class="play-btn" style="background:#777">
+          <span>🗑️ Clear</span>
+        </button>
+      </div>
+      <div id="urlStatus" class="small" style="margin-top:8px"></div>
+    </section>
+    
+    <hr style="border-color:#444;margin:24px 0"/>
+    
+    <section>
+      <h3>3) Paste M3U content</h3>
+      <p class="small">Directly paste your M3U playlist content</p>
+      <textarea id="textInput" placeholder="#EXTM3U
+#EXTINF:-1 tvg-id=&quot;channel1&quot; tvg-name=&quot;Channel 1&quot; tvg-logo=&quot;logo.png&quot; group-title=&quot;News&quot;,Channel 1
+http://example.com/stream.m3u8" 
+      style="width:100%;height:160px;padding:8px;border-radius:6px;background:#222;border:1px solid #444;color:#fff;font-family:monospace;font-size:12px"></textarea>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="uploadTextBtn" class="play-btn">
+          <span>📝 Save Pasted Playlist</span>
+        </button>
+        <button id="clearTextBtn" class="play-btn" style="background:#777">
+          <span>🗑️ Clear</span>
+        </button>
+      </div>
+      <div id="textStatus" class="small" style="margin-top:8px"></div>
+    </section>
+    
+    <hr style="border-color:#444;margin:24px 0"/>
+    
+    <section>
+      <h3>4) Upload XMLTV (EPG)</h3>
+      <p class="small">Electronic Program Guide for channel schedules and program information</p>
+      <input id="epgUrlInput" type="text" placeholder="https://example.com/epg.xml" style="width:100%;padding:8px;border-radius:6px;background:#222;border:1px solid #444;color:#fff"/>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="uploadEpgUrlBtn" class="play-btn">
+          <span>📺 Download & Save EPG</span>
+        </button>
+        <button id="clearEpgBtn" class="play-btn" style="background:#777">
+          <span>🗑️ Clear</span>
+        </button>
+      </div>
+      <div id="epgStatus" class="small" style="margin-top:8px"></div>
+      <div class="small" style="margin-top:8px;color:#aaa">
+        ℹ️ EPG data will show current programs in Live TV section
+      </div>
+    </section>
+    
+    <hr style="border-color:#444;margin:24px 0"/>
+    
+    <section>
+      <h3>5) System Information</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin-top:12px">
+        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:6px">
+          <div class="small">Playlist Status</div>
+          <div id="playlistStatus">Checking...</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:6px">
+          <div class="small">EPG Status</div>
+          <div id="epgFileStatus">Checking...</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);padding:12px;border-radius:6px">
+          <div class="small">Storage</div>
+          <div id="storageStatus">Checking...</div>
+        </div>
+      </div>
+    </section>
+    
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid #444">
+      <a href="/" style="color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+        <span>←</span> Back Home
+      </a>
+      <button id="refreshBtn" class="play-btn" style="background:#555;margin-left:12px">
+        🔄 Refresh Status
+      </button>
+    </div>
+  </div>
+
+<script>
+// DOM Elements
+const fileInput = document.getElementById('fileInput');
+const uploadFileBtn = document.getElementById('uploadFileBtn');
+const clearFileBtn = document.getElementById('clearFileBtn');
+const fileStatus = document.getElementById('fileStatus');
+
+const urlInput = document.getElementById('urlInput');
+const uploadUrlBtn = document.getElementById('uploadUrlBtn');
+const clearUrlBtn = document.getElementById('clearUrlBtn');
+const urlStatus = document.getElementById('urlStatus');
+
+const textInput = document.getElementById('textInput');
+const uploadTextBtn = document.getElementById('uploadTextBtn');
+const clearTextBtn = document.getElementById('clearTextBtn');
+const textStatus = document.getElementById('textStatus');
+
+const epgUrlInput = document.getElementById('epgUrlInput');
+const uploadEpgUrlBtn = document.getElementById('uploadEpgUrlBtn');
+const clearEpgBtn = document.getElementById('clearEpgBtn');
+const epgStatus = document.getElementById('epgStatus');
+
+const playlistStatus = document.getElementById('playlistStatus');
+const epgFileStatus = document.getElementById('epgFileStatus');
+const storageStatus = document.getElementById('storageStatus');
+const refreshBtn = document.getElementById('refreshBtn');
+
+// Update file size display
+fileInput.addEventListener('change', function() {
+  if (this.files[0]) {
+    const size = this.files[0].size;
+    const sizeMB = (size / (1024 * 1024)).toFixed(2);
+    fileStatus.textContent = `Selected: ${this.files[0].name} (${sizeMB} MB)`;
+    fileStatus.className = 'small status-info';
+  }
+});
+
+// File upload
+uploadFileBtn.addEventListener('click', async () => {
+  fileStatus.textContent = '';
+  const f = fileInput.files[0];
+  if (!f) {
+    fileStatus.textContent = '❌ Please choose a file first';
+    fileStatus.className = 'small status-error';
+    return;
+  }
+  
+  const fd = new FormData();
+  fd.append('file', f);
+  fileStatus.textContent = '⏳ Uploading...';
+  fileStatus.className = 'small status-info';
+  
+  try {
+    const r = await fetch('/upload', { method: 'POST', body: fd });
+    const j = await r.json();
+    if (j.error) {
+      fileStatus.textContent = '❌ ' + j.error;
+      fileStatus.className = 'small status-error';
+    } else {
+      fileStatus.textContent = '✅ Playlist uploaded successfully';
+      fileStatus.className = 'small status-success';
+      checkPlaylistStatus();
+    }
+  } catch(e) {
+    fileStatus.textContent = '❌ Upload failed: ' + (e.message || 'Network error');
+    fileStatus.className = 'small status-error';
+  }
+});
+
+clearFileBtn.addEventListener('click', () => {
+  fileInput.value = '';
+  fileStatus.textContent = '';
+  fileStatus.className = 'small';
+});
+
+// URL upload
+uploadUrlBtn.addEventListener('click', async () => {
+  urlStatus.textContent = '⏳ Fetching...';
+  urlStatus.className = 'small status-info';
+  const url = urlInput.value.trim();
+  
+  if (!/^https?:\/\//i.test(url)) {
+    urlStatus.textContent = '❌ Invalid URL format';
+    urlStatus.className = 'small status-error';
+    return;
+  }
+  
+  try {
+    const r = await fetch('/upload-m3u', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playlist: url })
+    });
+    const j = await r.json();
+    if (j.error) {
+      urlStatus.textContent = '❌ ' + j.error;
+      urlStatus.className = 'small status-error';
+    } else {
+      urlStatus.textContent = '✅ Playlist downloaded and saved';
+      urlStatus.className = 'small status-success';
+      checkPlaylistStatus();
+    }
+  } catch(e) {
+    urlStatus.textContent = '❌ Download failed: ' + (e.message || 'Network error');
+    urlStatus.className = 'small status-error';
+  }
+});
+
+clearUrlBtn.addEventListener('click', () => {
+  urlInput.value = '';
+  urlStatus.textContent = '';
+  urlStatus.className = 'small';
+});
+
+// Text upload
+uploadTextBtn.addEventListener('click', async () => {
+  textStatus.textContent = '⏳ Saving...';
+  textStatus.className = 'small status-info';
+  const txt = textInput.value.trim();
+  
+  if (!txt || txt.length < 10 || !txt.includes('#EXTM3U')) {
+    textStatus.textContent = '❌ Invalid M3U content (must include #EXTM3U)';
+    textStatus.className = 'small status-error';
+    return;
+  }
+  
+  try {
+    const r = await fetch('/upload-m3u', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playlist: txt })
+    });
+    const j = await r.json();
+    if (j.error) {
+      textStatus.textContent = '❌ ' + j.error;
+      textStatus.className = 'small status-error';
+    } else {
+      textStatus.textContent = '✅ Playlist saved successfully';
+      textStatus.className = 'small status-success';
+      checkPlaylistStatus();
+    }
+  } catch(e) {
+    textStatus.textContent = '❌ Save failed: ' + (e.message || 'Network error');
+    textStatus.className = 'small status-error';
+  }
+});
+
+clearTextBtn.addEventListener('click', () => {
+  textInput.value = '';
+  textStatus.textContent = '';
+  textStatus.className = 'small';
+});
+
+// EPG upload
+uploadEpgUrlBtn.addEventListener('click', async () => {
+  epgStatus.textContent = '⏳ Fetching EPG...';
+  epgStatus.className = 'small status-info';
+  const url = epgUrlInput.value.trim();
+  
+  if (!/^https?:\/\//i.test(url)) {
+    epgStatus.textContent = '❌ Invalid URL format';
+    epgStatus.className = 'small status-error';
+    return;
+  }
+  
+  try {
+    const r = await fetch('/upload-epg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epgUrl: url })
+    });
+    const j = await r.json();
+    if (j.error) {
+      epgStatus.textContent = '❌ ' + j.error;
+      epgStatus.className = 'small status-error';
+    } else {
+      epgStatus.textContent = '✅ EPG downloaded and saved';
+      epgStatus.className = 'small status-success';
+      checkEpgStatus();
+    }
+  } catch(e) {
+    epgStatus.textContent = '❌ Download failed: ' + (e.message || 'Network error');
+    epgStatus.className = 'small status-error';
+  }
+});
+
+clearEpgBtn.addEventListener('click', () => {
+  epgUrlInput.value = '';
+  epgStatus.textContent = '';
+  epgStatus.className = 'small';
+});
+
+// Status checking functions
+async function checkPlaylistStatus() {
+  try {
+    const response = await fetch('/upload/playlist.m3u', { method: 'HEAD' });
+    if (response.ok) {
+      const size = response.headers.get('content-length');
+      const sizeMB = size ? (size / (1024 * 1024)).toFixed(2) + ' MB' : 'Unknown size';
+      playlistStatus.innerHTML = `✅ Available <span class="file-size">${sizeMB}</span>`;
+      playlistStatus.className = 'status-success';
+    } else {
+      playlistStatus.textContent = '❌ Not found';
+      playlistStatus.className = 'status-error';
+    }
+  } catch (e) {
+    playlistStatus.textContent = '❌ Error checking';
+    playlistStatus.className = 'status-error';
+  }
+}
+
+async function checkEpgStatus() {
+  try {
+    const response = await fetch('/api/epg');
+    const data = await response.json();
+    const hasEpg = Object.keys(data).length > 0;
+    
+    if (hasEpg) {
+      const channelCount = Object.keys(data).length;
+      const programCount = Object.values(data).reduce((sum, progs) => sum + progs.length, 0);
+      epgFileStatus.innerHTML = `✅ Loaded <span class="file-size">${channelCount} channels, ${programCount} programs</span>`;
+      epgFileStatus.className = 'status-success';
+    } else {
+      epgFileStatus.textContent = '❌ No EPG data';
+      epgFileStatus.className = 'status-error';
+    }
+  } catch (e) {
+    epgFileStatus.textContent = '❌ Error checking';
+    epgFileStatus.className = 'status-error';
+  }
+}
+
+async function checkStorageStatus() {
+  try {
+    const response = await fetch('/api/categories');
+    const data = await response.json();
+    const totalChannels = (data.live?.length || 0) + (data.movies?.length || 0) + (data.series?.length || 0);
+    
+    if (totalChannels > 0) {
+      storageStatus.innerHTML = `✅ ${totalChannels} total channel groups loaded`;
+      storageStatus.className = 'status-success';
+    } else {
+      storageStatus.textContent = '⚠️ No channel groups found';
+      storageStatus.className = 'status-info';
+    }
+  } catch (e) {
+    storageStatus.textContent = '❌ Error checking';
+    storageStatus.className = 'status-error';
+  }
+}
+
+// Refresh all status
+async function refreshAllStatus() {
+  playlistStatus.textContent = '⏳ Checking...';
+  epgFileStatus.textContent = '⏳ Checking...';
+  storageStatus.textContent = '⏳ Checking...';
+  
+  await Promise.all([
+    checkPlaylistStatus(),
+    checkEpgStatus(),
+    checkStorageStatus()
+  ]);
+}
+
+// Initialize on load
+refreshBtn.addEventListener('click', refreshAllStatus);
+window.addEventListener('load', refreshAllStatus);
+
+// Auto-refresh status when operations complete
+[uploadFileBtn, uploadUrlBtn, uploadTextBtn, uploadEpgUrlBtn].forEach(btn => {
+  btn.addEventListener('click', () => {
+    setTimeout(refreshAllStatus, 1000);
+  });
+});
+</script>
+</body>
+</html>
